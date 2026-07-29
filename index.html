@@ -14,12 +14,14 @@
       --back-color: #2f2f46;
       --text-color: #ffffff;
       --panel-color: #171722;
+      --reveal-color: #e05a00;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       height: 100vh;
+      width: 100vw;
       overflow: hidden;
       font-family: Arial, sans-serif;
       background: radial-gradient(circle at top, #30304a, #101018);
@@ -27,40 +29,65 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 10px;
-      gap: 8px;
+      padding: 8px;
+      gap: 6px;
     }
 
     h1 {
-      font-size: clamp(22px, 4vw, 40px);
+      font-size: clamp(18px, 3.5vw, 38px);
       letter-spacing: 1px;
       flex-shrink: 0;
+      line-height: 1.1;
     }
 
     .panel {
       background: var(--panel-color);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 12px;
-      padding: 8px 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      border-radius: 10px;
+      padding: 6px 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
       flex-shrink: 0;
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
       flex-wrap: wrap;
       justify-content: center;
+      width: 100%;
+      max-width: 700px;
     }
 
     .score {
-      font-size: clamp(14px, 2.5vw, 20px);
+      font-size: clamp(13px, 2.2vw, 18px);
       font-weight: bold;
     }
 
     .message {
       color: #d8d8ed;
-      font-size: clamp(12px, 2vw, 16px);
+      font-size: clamp(11px, 1.8vw, 15px);
     }
 
+    /* Reveal button — hidden until first piece flipped */
+    #revealBtn {
+      display: none;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 18px;
+      background: var(--reveal-color);
+      color: #ffffff;
+      font-size: clamp(12px, 2vw, 15px);
+      font-weight: bold;
+      cursor: pointer;
+      animation: pulse 1.6s infinite;
+    }
+
+    #revealBtn:hover { filter: brightness(1.15); animation: none; }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(224,90,0,0.5); }
+      50%       { box-shadow: 0 0 0 8px rgba(224,90,0,0); }
+    }
+
+    /* Board */
     .board-wrap {
       flex: 1 1 auto;
       display: flex;
@@ -75,9 +102,9 @@
       grid-template-columns: repeat(var(--cols), var(--piece-size));
       grid-template-rows: repeat(var(--rows), var(--piece-size));
       gap: var(--gap);
-      padding: 8px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.08);
+      padding: 6px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
     }
 
     .piece {
@@ -116,7 +143,7 @@
           rgba(255,255,255,0.07) 75%
         ),
         var(--back-color);
-      background-size: 20px 20px;
+      background-size: 18px 18px;
     }
 
     .piece.revealed::before { display: none; }
@@ -128,15 +155,11 @@
       background-position: var(--bg-x) var(--bg-y);
     }
 
-    /* ---- Shared overlay base ---- */
+    /* ---- Shared overlay ---- */
     .overlay {
       display: none;
       position: fixed;
       inset: 0;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      gap: 16px;
       z-index: 100;
       opacity: 0;
       transition: opacity 1s ease;
@@ -145,83 +168,65 @@
     .overlay.visible  { display: flex; }
     .overlay.faded-in { opacity: 1; }
 
-    /* ---- Full puzzle image overlay ---- */
+    /* ---- Puzzle image reveal overlay ---- */
     #revealOverlay {
       background: rgba(0, 0, 0, 0.92);
-      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 14px;
     }
 
     #revealOverlay img {
-      max-width: 88vw;
-      max-height: 75vh;
-      border-radius: 14px;
+      max-width: 90vw;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: 12px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
     }
 
     .overlay-label {
-      font-size: clamp(18px, 3vw, 28px);
+      font-size: clamp(16px, 3vw, 26px);
       font-weight: bold;
       color: #ffffff;
       letter-spacing: 1px;
     }
 
     .overlay-score {
-      font-size: clamp(13px, 2vw, 18px);
+      font-size: clamp(12px, 2vw, 17px);
       color: #c8c8dd;
     }
 
     /* ---- Closing image overlay ---- */
     #closingOverlay {
-      background: #000000;
+      background: #000;
+      justify-content: center;
+      align-items: flex-end;
       z-index: 200;
-      flex-direction: column;
-      gap: 0;
     }
 
-    #closingOverlay img {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
+    /* Closing image fills screen completely, no crop, no zoom */
+    #closingImage {
       position: absolute;
       inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      background: #000;
     }
 
-    .closing-content {
+    /* Small transparent caption over the bottom of the closing image */
+    .closing-caption {
       position: relative;
       z-index: 10;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-      padding: 30px 40px;
-      border-radius: 20px;
-      background: rgba(0, 0, 0, 0.55);
-      backdrop-filter: blur(6px);
+      width: 100%;
+      padding: 10px 20px 16px;
       text-align: center;
-    }
-
-    .closing-stars {
-      font-size: clamp(28px, 6vw, 56px);
-      letter-spacing: 8px;
-    }
-
-    .closing-title {
-      font-size: clamp(32px, 7vw, 72px);
-      font-weight: bold;
-      letter-spacing: 4px;
-      color: #ffffff;
-      text-shadow: 0 0 40px rgba(108, 99, 255, 0.9);
-    }
-
-    .closing-subtitle {
-      font-size: clamp(14px, 2.5vw, 22px);
-      color: #e0e0f0;
-      letter-spacing: 2px;
-    }
-
-    .closing-score {
-      font-size: clamp(12px, 2vw, 18px);
-      color: #b0b0d0;
+      font-size: clamp(11px, 1.8vw, 15px);
+      color: rgba(255, 255, 255, 0.82);
+      background: transparent;
+      letter-spacing: 1px;
     }
   </style>
 </head>
@@ -231,14 +236,15 @@
 
   <div class="panel">
     <div class="score">Pieces turned over: <span id="turnedCount">0</span> / 48</div>
-    <div id="message" class="message">Select any piece to reveal part of the image.</div>
+    <div id="message" class="message">Select any piece to begin.</div>
+    <button id="revealBtn" aria-label="Reveal the image now">Reveal</button>
   </div>
 
   <div class="board-wrap">
     <section id="board" class="board" aria-label="Vlugkuns puzzle board"></section>
   </div>
 
-  <!-- Full puzzle image overlay -->
+  <!-- Puzzle image reveal overlay -->
   <div id="revealOverlay" class="overlay" role="dialog" aria-label="Full image reveal">
     <div class="overlay-label">The image was...</div>
     <img id="revealImage" src="" alt="The full puzzle image" />
@@ -246,14 +252,9 @@
   </div>
 
   <!-- Closing image overlay -->
-  <div id="closingOverlay" class="overlay" role="dialog" aria-label="Game closing screen">
+  <div id="closingOverlay" class="overlay" role="dialog" aria-label="Closing screen">
     <img id="closingImage" src="" alt="Closing image" />
-    <div class="closing-content">
-      <div class="closing-stars" id="closingStars">★★★</div>
-      <div class="closing-title">Vlugkuns</div>
-      <div class="closing-subtitle">Thanks for playing!</div>
-      <div class="closing-score" id="closingScore"></div>
-    </div>
+    <div class="closing-caption">Thanks for playing Vlugkuns</div>
   </div>
 
   <script>
@@ -267,23 +268,30 @@
     const board              = document.getElementById("board");
     const turnedCountDisplay = document.getElementById("turnedCount");
     const message            = document.getElementById("message");
+    const revealBtn          = document.getElementById("revealBtn");
     const revealOverlay      = document.getElementById("revealOverlay");
     const revealImage        = document.getElementById("revealImage");
     const revealScore        = document.getElementById("revealScore");
     const closingOverlay     = document.getElementById("closingOverlay");
     const closingImage       = document.getElementById("closingImage");
-    const closingScore       = document.getElementById("closingScore");
-    const closingStars       = document.getElementById("closingStars");
 
-    let turnedCount = 0;
+    let turnedCount   = 0;
+    let gameOver      = false;
+
+    revealBtn.addEventListener("click", onRevealPressed);
+
+    startGame();
+
+    /* ---- Game setup ---- */
 
     function calcPieceSize() {
-      const headerH = 110;
-      const padding = 36;
+      const panelH  = 90;
+      const titleH  = 44;
+      const padding = 20;
       const gap     = 2;
-      const maxW    = (window.innerWidth  - padding - (COLS - 1) * gap) / COLS;
-      const maxH    = (window.innerHeight - headerH - padding - (ROWS - 1) * gap) / ROWS;
-      return Math.max(Math.floor(Math.min(maxW, maxH)), 30);
+      const avW     = window.innerWidth  - padding - (COLS - 1) * gap;
+      const avH     = window.innerHeight - panelH - titleH - padding - (ROWS - 1) * gap;
+      return Math.max(Math.floor(Math.min(avW / COLS, avH / ROWS)), 28);
     }
 
     function buildJigsawPath(s) {
@@ -295,49 +303,38 @@
       return [
         `M ${t} 0`,
         `H ${b} C ${b} ${-bh}, ${bm} ${-bh}, ${bm} 0`,
-        `H ${e - t} Q ${e} 0 ${e} ${t}`,
-        `V ${b} C ${e + bh} ${b}, ${e + bh} ${bm}, ${e} ${bm}`,
-        `V ${e - t} Q ${e} ${e} ${e - t} ${e}`,
-        `H ${bm} C ${bm} ${e + bh}, ${b} ${e + bh}, ${b} ${e}`,
-        `H ${t} Q 0 ${e} 0 ${e - t}`,
+        `H ${e-t} Q ${e} 0 ${e} ${t}`,
+        `V ${b} C ${e+bh} ${b}, ${e+bh} ${bm}, ${e} ${bm}`,
+        `V ${e-t} Q ${e} ${e} ${e-t} ${e}`,
+        `H ${bm} C ${bm} ${e+bh}, ${b} ${e+bh}, ${b} ${e}`,
+        `H ${t} Q 0 ${e} 0 ${e-t}`,
         `V ${bm} C ${-bh} ${bm}, ${-bh} ${b}, 0 ${b}`,
         `V ${t} Q 0 0 ${t} 0 Z`
       ].join(" ");
     }
 
-    function fadeIn(el) {
-      el.classList.add("visible");
-      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("faded-in")));
-    }
-
-    function fadeOut(el) {
-      el.classList.remove("faded-in");
-      el.addEventListener("transitionend", () => el.classList.remove("visible"), { once: true });
-    }
-
-    startGame();
-
     function startGame() {
       turnedCount = 0;
+      gameOver    = false;
       updateTurnedCount();
+      revealBtn.style.display = "none";
 
       const size       = calcPieceSize();
       const jigsawPath = buildJigsawPath(size);
 
       document.documentElement.style.setProperty("--piece-size", size + "px");
 
-      const shuffledPieces = shuffleArray(createPieces(size));
-
+      const shuffled = shuffleArray(createPieces(size));
       board.innerHTML = "";
       board.style.setProperty("--image-url", "url('" + PUZZLE_IMAGE + "')");
 
-      shuffledPieces.forEach((pieceData) => {
+      shuffled.forEach((pd) => {
         const piece = document.createElement("button");
         piece.className = "piece";
         piece.type = "button";
         piece.setAttribute("aria-label", "Hidden puzzle piece");
-        piece.style.setProperty("--bg-x", pieceData.bgX + "px");
-        piece.style.setProperty("--bg-y", pieceData.bgY + "px");
+        piece.style.setProperty("--bg-x", pd.bgX + "px");
+        piece.style.setProperty("--bg-y", pd.bgY + "px");
         piece.style.clipPath = "path('" + jigsawPath + "')";
         piece.addEventListener("click", () => revealPiece(piece));
         board.appendChild(piece);
@@ -354,30 +351,45 @@
       return pieces;
     }
 
+    /* ---- Gameplay ---- */
+
     function revealPiece(piece) {
-      if (piece.classList.contains("revealed")) return;
+      if (gameOver || piece.classList.contains("revealed")) return;
+
       piece.classList.add("revealed");
       piece.setAttribute("aria-label", "Revealed puzzle piece");
       turnedCount++;
       updateTurnedCount();
 
+      /* Show Reveal button after first flip */
+      if (turnedCount === 1) {
+        revealBtn.style.display = "inline-block";
+        message.textContent = "Think you know the image? Press Reveal!";
+      }
+
+      /* All pieces flipped — start countdown */
       if (turnedCount === TOTAL_PIECES) {
+        revealBtn.style.display = "none";
         startCountdown();
-      } else if (turnedCount === 1) {
-        message.textContent = "Good start — can you identify the image already?";
-      } else {
-        message.textContent = "Keep going — fewer pieces means a better score!";
       }
     }
 
+    function onRevealPressed() {
+      if (gameOver) return;
+      gameOver = true;
+      revealBtn.style.display = "none";
+      showFullImage();
+    }
+
     function startCountdown() {
-      let secondsLeft = 10;
-      message.textContent = "All pieces revealed! Showing full image in " + secondsLeft + "s...";
+      gameOver = true;
+      let secondsLeft = 5;
+      message.textContent = "All pieces revealed! Showing image in " + secondsLeft + "s...";
 
       const countdown = setInterval(() => {
         secondsLeft--;
         if (secondsLeft > 0) {
-          message.textContent = "All pieces revealed! Showing full image in " + secondsLeft + "s...";
+          message.textContent = "All pieces revealed! Showing image in " + secondsLeft + "s...";
         } else {
           clearInterval(countdown);
           showFullImage();
@@ -385,28 +397,33 @@
       }, 1000);
     }
 
+    /* ---- Reveal sequence ---- */
+
     function showFullImage() {
       revealImage.src         = PUZZLE_IMAGE;
       revealScore.textContent = "You turned over " + turnedCount + " of 48 pieces.";
       fadeIn(revealOverlay);
 
-      /* After 10 seconds fade to closing image */
-      setTimeout(showClosingScreen, 10000);
+      /* After 5 seconds switch to closing image */
+      setTimeout(showClosingScreen, 5000);
     }
 
     function showClosingScreen() {
-      /* Star rating */
-      let stars = "★★★";
-      if      (turnedCount > 36) stars = "★☆☆";
-      else if (turnedCount > 18) stars = "★★☆";
-
-      closingStars.textContent = stars;
-      closingScore.textContent = "You identified the image after turning over " + turnedCount + " of 48 pieces.";
-      closingImage.src         = CLOSING_IMAGE;
-
-      /* Fade out puzzle image overlay, fade in closing overlay */
+      closingImage.src = CLOSING_IMAGE;
       fadeOut(revealOverlay);
       fadeIn(closingOverlay);
+    }
+
+    /* ---- Helpers ---- */
+
+    function fadeIn(el) {
+      el.classList.add("visible");
+      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("faded-in")));
+    }
+
+    function fadeOut(el) {
+      el.classList.remove("faded-in");
+      el.addEventListener("transitionend", () => el.classList.remove("visible"), { once: true });
     }
 
     function updateTurnedCount() {
@@ -414,16 +431,16 @@
     }
 
     function shuffleArray(array) {
-      const shuffled = [...array];
-      for (let i = shuffled.length - 1; i > 0; i--) {
+      const a = [...array];
+      for (let i = a.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        [a[i], a[j]] = [a[j], a[i]];
       }
-      return shuffled;
+      return a;
     }
 
     window.addEventListener("resize", () => {
-      if (turnedCount < TOTAL_PIECES) startGame();
+      if (!gameOver) startGame();
     });
   </script>
 </body>
